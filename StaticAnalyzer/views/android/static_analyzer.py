@@ -59,7 +59,7 @@ from StaticAnalyzer.views.android.manifest_analysis import (
 )
 from StaticAnalyzer.views.android.binary_analysis import (
     elf_analysis,
-    resource_analysis,
+    res_analysis,
 )
 
 
@@ -137,10 +137,17 @@ def static_analyzer(request):
                     man_data_dic = manifest_data(app_dic['parsed_xml'])
 
                     man_an_dic = manifest_analysis(
+                        app_dic,
                         app_dic['parsed_xml'],
                         man_data_dic
                     )
-                    elf_an_buff = elf_analysis(
+                    bin_an_buff = []
+                    bin_an_buff += elf_analysis(
+                        man_an_dic,
+                        app_dic['app_dir'],
+                        "apk"
+                    )
+                    bin_an_buff += res_analysis(
                         man_an_dic,
                         app_dic['app_dir'],
                         "apk"
@@ -152,6 +159,7 @@ def static_analyzer(request):
                     dex_2_smali(app_dic['app_dir'], app_dic['tools_dir'])
                     jar_2_java(app_dic['app_dir'], app_dic['tools_dir'])
                     code_an_dic = code_analysis(
+                        man_an_dic,
                         app_dic['app_dir'],
                         app_dic['md5'],
                         man_an_dic['permissons'],
@@ -178,8 +186,7 @@ def static_analyzer(request):
                                 man_data_dic,
                                 man_an_dic,
                                 code_an_dic,
-                                cert_dic,
-                                elf_an_buff
+                                cert_dic
                             )
                         elif rescan == '0':
                             print "\n[INFO] Saving to Database"
@@ -188,8 +195,7 @@ def static_analyzer(request):
                                 man_data_dic,
                                 man_an_dic,
                                 code_an_dic,
-                                cert_dic,
-                                elf_an_buff
+                                cert_dic
                             )
                     except:
                         PrintException("[ERROR] Saving to Database Failed")
@@ -198,8 +204,7 @@ def static_analyzer(request):
                         man_data_dic,
                         man_an_dic,
                         code_an_dic,
-                        cert_dic,
-                        elf_an_buff
+                        cert_dic
                     )
                 template = "static_analysis/static_analysis.html"
                 return render(request, template, context)
